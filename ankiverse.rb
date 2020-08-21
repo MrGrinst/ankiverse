@@ -1,12 +1,10 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/env ruby
 
 require 'rubygems'
 require 'nokogiri'
-require 'sinatra'
+require 'sinatra/base'
 require 'yaml'
-
-require RUBY_VERSION < '1.9' ? 'fastercsv' : 'csv'
-CSV = FasterCSV if not defined? CSV
+require 'csv'
 
 require './anki_card_generator'
 require './esv_api_request'
