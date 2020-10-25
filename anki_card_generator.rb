@@ -1,12 +1,11 @@
-require "byebug"
 FILLER_WORDS = %w[a and or an the of as at in to on by like br it with did].freeze
 
 class AnkiCardGenerator
-  attr_accessor :poem, :other_fields, :options
+  attr_accessor :poem, :deck, :options
 
-  def initialize(poem, other_fields)
+  def initialize(poem, deck)
     @poem = poem.to_s
-    @other_fields = [*other_fields].select {|field| field.to_s != "" }
+    @deck = deck
   end
 
   def lines
@@ -23,13 +22,24 @@ class AnkiCardGenerator
       (options[:ellipsis] == false ? "" : "...")
   end
 
+  def generate_overview_card
+    [
+      lines[0] + " (Full)",
+      lines[1..-1].join(" <br/> "),
+      "Basic",
+      nil,
+      deck,
+      "overview"
+    ]
+  end
+
   def generate_basic_card(index)
     [
       generate_prompt(index),
       lines[index + 1, answer_line_count].join(" <br/> "),
       "Basic",
       nil,
-      *other_fields
+      deck
     ]
   end
 
@@ -44,7 +54,7 @@ class AnkiCardGenerator
       }
     end
     can_replace = parsed_words.select { |w| w[:can_be_replaced] }
-    to_replace = ((can_replace.length - 1) / 2).ceil
+    to_replace = [((can_replace.length - 1) / 2).ceil, 1].max
     can_replace.sample(to_replace).each do |word|
       word[:without_punctuation] = "{{c1::#{word[:without_punctuation]}}}"
     end
@@ -56,7 +66,7 @@ class AnkiCardGenerator
       nil,
       "Cloze",
       nil,
-      *other_fields
+      deck
     ]
   end
 
@@ -72,11 +82,11 @@ class AnkiCardGenerator
       back_type,
       "Basic (type in the answer)",
       back_text,
-      *other_fields
+      deck
     ]
   end
 
-  def csv(options = {})
+  def rows_only(options = {})
     @options = options
     basic_cards = []
     cloze_cards = []
@@ -86,16 +96,21 @@ class AnkiCardGenerator
       cloze_cards << generate_cloze_card(i)
       type_cards << generate_type_card(i)
     end
+    all = []
+    all.concat(cloze_cards.shift(3))
+    basic_cards.length.times do |i|
+      all.concat(cloze_cards.shift(1))
+      all.concat(basic_cards.shift(1))
+      all.concat(type_cards.shift(1))
+    end
+    all.concat(type_cards.shift(3))
+    all.concat([generate_overview_card])
+    all
+  end
+
+  def csv(options = {})
     CSV.generate do |csv|
-      all = []
-      all.concat(cloze_cards[0..2])
-      basic_cards.length.times do |i|
-        all << cloze_cards[i + 3] if (i + 3) < basic_cards.length
-        all << basic_cards[i]
-        all << type_cards[i - 3] if (i - 3) >= 0
-      end
-      all.concat(type_cards[-3..-1])
-      all.each { |a| csv << a }
+      rows_only(options).each { |a| csv << a }
     end
   end
 
@@ -107,6 +122,9 @@ class AnkiCardGenerator
       unless (1..20).include?(pl)
         raise ArgumentError, "the numbers of lines need to be numbers"
       end
+      if lines.length - pl < 2
+        pl = lines.length - 1
+      end
       pl
     end
   end
@@ -116,6 +134,9 @@ class AnkiCardGenerator
       al = options[:lines][1]
       unless (1..20).include?(al)
         raise ArgumentError, "the numbers of lines need to be numbers"
+      end
+      if lines.length - al < 2
+        al = 1
       end
       al
     end

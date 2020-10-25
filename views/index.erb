@@ -4,14 +4,9 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
   <script>
     $(function() {
-      $('#add_field').click(function() {
-        $(this).before( $(this).siblings('.other_field:last').clone() );
-        $('.other_field:last input').val("");
-      });
       $('#bible_form').submit(function() {
         if ($('#passage').val()) {
-          newlocation = "/bible/" + $('#passage').val() +
-            "/" + $('[name=version]:checked').attr('value') + "/";
+          newlocation = "/bible/" + $('#passage').val() + "/";
           if ($('[name=verse_numbers]:checked').val() == 'with_verse_numbers') {
             newlocation = newlocation + $('[name=verse_numbers]:checked').attr('value');
           }
@@ -34,7 +29,6 @@
 
 <body>
   <h1>AnkiVerse</h1>
-  <h2>Memorise poetry with <a href="http://ankisrs.net/">Anki</a></h2>
   <form action="/" method="post" accept-charset="UTF-8">
     <input name="utf8" type="hidden" value="&#x2713;" />
     <table>
@@ -63,13 +57,16 @@
             </label>
           </div>
           <div>
-            Other fields (tags, etc.):
-            <% (@other_fields || [""]).each do |val| %>
-              <div class="other_field">
-                <input type="text" name="other_fields[]" value="<%= val %>" />
-              </div>
-            <% end %>
-            <a href="javascript:" id="add_field">Add</a><br />
+            <label>
+              <input name="put_into_anki" type="checkbox" checked="checked"/>
+              Automatically load into Anki (via AnkiConnect)
+            </label>
+          </div>
+          <div>
+            Deck: <input type="text" name="deck" value="Scripture" />
+          </div>
+          <div>
+            Password: <input type="password" name="password" />
           </div>
         </td>
       </tr>
@@ -77,33 +74,9 @@
     <input type="submit" value="Get Anki Cards" />
   </form>
 
-  <p>
-    <a href="mailto:dave@burt.id.au">Help</a>
-  </p>
-
   <form action="/bible" id="bible_form">
-    <input type="text" id="passage" name="passage" value="<%= @passage %>" />
-    <label><input type="radio" name="version" value="ESV" checked /> ESV</label>
-    <label><input type="radio" name="version" value="NIV" /> NIV (beta)</label>
-    <br />
-    <label><input type="radio" name="verse_numbers" value="without_verse_numbers" checked /> Without verse numbers</label>
-    <label><input type="radio" name="verse_numbers" value="with_verse_numbers" /> With verse numbers</label>
-    <br />
+    <input type="text" id="passage" name="passage" />
     <input type="submit" value="Get Bible passage" />
   </form>
-
-  <a href="https://github.com/dburt/ankiverse"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
-
-  <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-1578876-3']);
-    _gaq.push(['_trackPageview']);
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-  </script>
-
 </body>
 </html>
