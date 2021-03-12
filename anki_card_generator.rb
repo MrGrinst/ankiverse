@@ -33,6 +33,16 @@ class AnkiCardGenerator
     ]
   end
 
+  def generate_reverse_card
+    [
+      lines[1..-1].join(" <br/> "),
+      lines[0],
+      "Basic",
+      nil,
+      deck
+    ]
+  end
+
   def generate_basic_card(index)
     [
       generate_prompt(index),
@@ -104,7 +114,7 @@ class AnkiCardGenerator
       all.concat(type_cards.shift(1))
     end
     all.concat(type_cards.shift(3))
-    all.concat([generate_overview_card])
+    all.concat([generate_overview_card, generate_reverse_card])
     all
   end
 
